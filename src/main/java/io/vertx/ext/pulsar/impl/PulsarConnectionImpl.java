@@ -69,22 +69,22 @@ public class PulsarConnectionImpl implements PulsarConnection {
 
     context.runOnContext(ignored -> {
       PulsarClient pulsarClient = connection.get();
-      if (pulsarClient == null || closed.get()){
+      if (pulsarClient == null || closed.get()) {
         done.handle(Future.failedFuture("No opening connection to close"));
         return;
       }
       try {
         CompletableFuture future = pulsarClient.closeAsync();
-        future.whenCompleteAsync((r,e) ->{
-          if(e == null){
+        future.whenCompleteAsync((r, e) -> {
+          if (e == null) {
             done.handle(Future.succeededFuture());
-          }else{
-            done.handle(Future.failedFuture((Exception)e));
+          } else {
+            done.handle(Future.failedFuture((Exception) e));
           }
         });
-      }catch (Exception ex){
+      } catch (Exception ex) {
         done.handle(Future.failedFuture(ex));
-      }finally {
+      } finally {
         closed.set(true);
       }
     });
@@ -98,8 +98,8 @@ public class PulsarConnectionImpl implements PulsarConnection {
 
   @Override
   public PulsarConnection createConsumer(String topic, PulsarConsumerOptions options, Handler<AsyncResult<PulsarConsumer>> completionHandler) {
-    PulsarConsumerOptions pulsarConsumerOptions = options == null ? new PulsarConsumerOptions():options;
-    runWithTrampoline(x ->{
+    PulsarConsumerOptions pulsarConsumerOptions = options == null ? new PulsarConsumerOptions() : options;
+    runWithTrampoline(x -> {
       PulsarClient pulsarClient = connection.get();
 
     });
@@ -126,5 +126,27 @@ public class PulsarConnectionImpl implements PulsarConnection {
     } else {
       runOnContext(action);
     }
+  }
+
+  protected PulsarClient connection() {
+    return connection.get();
+  }
+
+  protected boolean isClosed(){
+    return closed.get();
+  }
+
+  protected void register(PulsarConsumer consumer){
+    consumers.add(consumer);
+  }
+  protected void register(PulsarProducer producer){
+    producers.add(producer);
+  }
+
+  protected void unregister(PulsarConsumer consumer){
+    consumers.remove(consumer);
+  }
+  protected void unregister(PulsarProducer producer){
+    producers.remove(producer);
   }
 }
