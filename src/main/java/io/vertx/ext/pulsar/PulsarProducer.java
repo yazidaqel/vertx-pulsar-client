@@ -16,7 +16,7 @@ public interface PulsarProducer extends WriteStream<PulsarMessage> {
 
   void close(Handler<AsyncResult<Void>> handler);
 
-  String address();
+  String topic();
 
   PulsarConnection connection();
 }

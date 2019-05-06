@@ -11,13 +11,14 @@ import io.vertx.ext.pulsar.PulsarMessage;
 import org.apache.pulsar.client.api.*;
 
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
 
 public class PulsarConsumerImpl implements PulsarConsumer {
 
   private final PulsarConnectionImpl connection;
   private String topic;
   private boolean closed;
-  private long demand = Long.MAX_VALUE;
+  private AtomicLong demand = new AtomicLong();
 
   private Handler<Throwable> exceptionHandler;
   private Handler<PulsarMessage> handler;
@@ -48,19 +49,23 @@ public class PulsarConsumerImpl implements PulsarConsumer {
 
       this.consumer = consumerBuilder.subscribe();
 
-
-      connection.runWithTrampoline(x -> {
-        do {
-          try {
-            // TODO: Add generic type for message and proceed with conversion
-            Message<PulsarMessage> message = this.consumer.receive();
-            handler.handle(message.getValue());
-          } catch (PulsarClientException e) {
-          }
-        } while (!connection.isClosed());
-      });
       completionHandler.handle(Future.succeededFuture(this));
       closed = false;
+      demand.set(Long.MAX_VALUE);
+      long v = demand.get();
+      do {
+        try {
+          if (v == 0L)
+            continue;
+          // TODO: Add generic type for message and proceed with conversion
+          if (this.handler != null) {
+            Message<PulsarMessage> message = this.consumer.receive();
+            this.handler.handle(message.getValue());
+          }
+        } catch (PulsarClientException e) {
+          exceptionHandler.handle(e);
+        }
+      } while (!connection.isClosed() && !this.demand.compareAndSet(v, v-1));
 
     } catch (Exception e) {
       completionHandler.handle(Future.failedFuture(e));
@@ -113,7 +118,7 @@ public class PulsarConsumerImpl implements PulsarConsumer {
 
   @Override
   public PulsarConsumer pause() {
-    demand = 0L;
+    demand.set(0L);
     return this;
   }
 
@@ -125,9 +130,8 @@ public class PulsarConsumerImpl implements PulsarConsumer {
   @Override
   public synchronized PulsarConsumer fetch(long amount) {
     if (amount > 0) {
-      demand += amount;
-      if (demand < 0L) {
-        demand = Long.MAX_VALUE;
+      if (demand.addAndGet(amount) < 0L) {
+        demand.set(Long.MAX_VALUE);
       }
     }
     return this;

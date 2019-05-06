@@ -75,7 +75,7 @@ public class PulsarConnectionImpl implements PulsarConnection {
       }
       try {
         CompletableFuture future = pulsarClient.closeAsync();
-        future.whenCompleteAsync((r, e) -> {
+        future.whenComplete((r, e) -> {
           if (e == null) {
             done.handle(Future.succeededFuture());
           } else {
@@ -100,8 +100,7 @@ public class PulsarConnectionImpl implements PulsarConnection {
   public PulsarConnection createConsumer(String topic, PulsarConsumerOptions options, Handler<AsyncResult<PulsarConsumer>> completionHandler) {
     PulsarConsumerOptions pulsarConsumerOptions = options == null ? new PulsarConsumerOptions() : options;
     runWithTrampoline(x -> {
-      PulsarClient pulsarClient = connection.get();
-
+      new PulsarConsumerImpl(topic, this, options, null, completionHandler);
     });
     return this;
   }
