@@ -1,3 +1,18 @@
+/*
+ * Copyright (c) 2018-2019 The original author or authors
+ *
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * and Apache License v2.0 which accompanies this distribution.
+ *
+ *        The Eclipse Public License is available at
+ *        http://www.eclipse.org/legal/epl-v10.html
+ *
+ *        The Apache License v2.0 is available at
+ *        http://www.opensource.org/licenses/apache2.0.php
+ *
+ * You may elect to redistribute this code under either of these licenses.
+ */
 package io.vertx.ext.pulsar.impl;
 
 import io.vertx.core.*;
@@ -93,16 +108,26 @@ public class PulsarConnectionImpl implements PulsarConnection {
 
   @Override
   public PulsarConnection createConsumer(String topic, Handler<AsyncResult<PulsarConsumer>> completionHandler) {
-    return createConsumer(topic, null, completionHandler);
+    return createConsumer(topic, completionHandler);
   }
 
   @Override
   public PulsarConnection createConsumer(String topic, PulsarConsumerOptions options, Handler<AsyncResult<PulsarConsumer>> completionHandler) {
     PulsarConsumerOptions pulsarConsumerOptions = options == null ? new PulsarConsumerOptions() : options;
     runWithTrampoline(x -> {
-      new PulsarConsumerImpl(topic, this, options, null, completionHandler);
+      new PulsarConsumerImpl(topic, this, pulsarConsumerOptions, null, completionHandler);
     });
     return this;
+  }
+
+  @Override
+  public PulsarConnection createConsumer(String address, PulsarConsumerOptions options, Handler<PulsarMessage> messageHandler, Handler<AsyncResult<PulsarConsumer>> completionHandler) {
+    return null;
+  }
+
+  @Override
+  public PulsarConnection createConsumer(String address, Handler<PulsarMessage> messageHandler, Handler<AsyncResult<PulsarConsumer>> completionHandler) {
+    return null;
   }
 
   @Override
@@ -112,6 +137,10 @@ public class PulsarConnectionImpl implements PulsarConnection {
 
   @Override
   public PulsarConnection createProducer(String topic, PulsarProducerOptions options, Handler<AsyncResult<PulsarProducer>> completionHandler) {
+    PulsarProducerOptions pulsarProducerOptions = options == null ? new PulsarProducerOptions() : options;
+    runWithTrampoline(x -> {
+      new PulsarProducerImpl(topic, this, pulsarProducerOptions, completionHandler);
+    });
     return this;
   }
 

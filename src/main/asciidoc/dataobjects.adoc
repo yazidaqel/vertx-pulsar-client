@@ -1,0 +1,46 @@
+= Cheatsheets
+
+[[PulsarClientOptions]]
+== PulsarClientOptions
+
+
+[cols=">25%,25%,50%"]
+[frame="topbot"]
+|===
+^|Name | Type ^| Description
+|[[host]]`@host`|`String`|-
+|[[port]]`@port`|`Number (int)`|-
+|===
+
+[[PulsarConsumerOptions]]
+== PulsarConsumerOptions
+
+
+[cols=">25%,25%,50%"]
+[frame="topbot"]
+|===
+^|Name | Type ^| Description
+|[[ackTimeout]]`@ackTimeout`|`Number (long)`|-
+|[[subscriptionName]]`@subscriptionName`|`String`|-
+|[[subscriptionType]]`@subscriptionType`|`String`|-
+|[[topic]]`@topic`|`String`|-
+|===
+
+[[PulsarProducerOptions]]
+== PulsarProducerOptions
+
+
+[cols=">25%,25%,50%"]
+[frame="topbot"]
+|===
+^|Name | Type ^| Description
+|[[batchingMaxMessages]]`@batchingMaxMessages`|`Number (int)`|-
+|[[batchingMaxPublishDelay]]`@batchingMaxPublishDelay`|`Number (long)`|-
+|[[blockIfQueueFull]]`@blockIfQueueFull`|`Boolean`|-
+|[[compressionType]]`@compressionType`|`String`|-
+|[[enableBatching]]`@enableBatching`|`Boolean`|-
+|[[producerName]]`@producerName`|`String`|-
+|[[sendTimeout]]`@sendTimeout`|`Number (int)`|-
+|[[topic]]`@topic`|`String`|-
+|===
+
