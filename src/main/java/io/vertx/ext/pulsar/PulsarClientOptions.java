@@ -1,6 +1,7 @@
 package io.vertx.ext.pulsar;
 
 import io.vertx.codegen.annotations.DataObject;
+import io.vertx.core.json.JsonObject;
 
 @DataObject(generateConverter = true, inheritConverter = true)
 public class PulsarClientOptions {
@@ -17,6 +18,10 @@ public class PulsarClientOptions {
     this.port = other.port;
   }
 
+  public PulsarClientOptions(JsonObject jsonObject) {
+
+  }
+
   public String getHost() {
     return host;
   }
@@ -30,7 +35,8 @@ public class PulsarClientOptions {
     return port;
   }
 
-  public void setPort(int port) {
+  public PulsarClientOptions setPort(int port) {
     this.port = port;
+    return this;
   }
 }

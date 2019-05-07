@@ -1,6 +1,7 @@
 package io.vertx.ext.pulsar;
 
 import io.vertx.codegen.annotations.DataObject;
+import io.vertx.core.json.JsonObject;
 
 @DataObject(generateConverter = true)
 public class PulsarProducerOptions {
@@ -13,6 +14,13 @@ public class PulsarProducerOptions {
   private boolean blockIfQueueFull;
   private long 	batchingMaxPublishDelay;
   private int batchingMaxMessages;
+
+  PulsarProducerOptions(){
+    super();
+  }
+  PulsarProducerOptions(JsonObject jsonObject){
+    super();
+  }
 
   public String getProducerName() {
     return producerName;

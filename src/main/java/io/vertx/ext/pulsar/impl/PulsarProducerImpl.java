@@ -8,9 +8,7 @@ import io.vertx.ext.pulsar.PulsarConnection;
 import io.vertx.ext.pulsar.PulsarMessage;
 import io.vertx.ext.pulsar.PulsarProducer;
 import io.vertx.ext.pulsar.PulsarProducerOptions;
-import org.apache.pulsar.client.api.CompressionType;
-import org.apache.pulsar.client.api.ProducerBuilder;
-import org.apache.pulsar.client.api.PulsarClient;
+import org.apache.pulsar.client.api.*;
 
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -23,6 +21,7 @@ public class PulsarProducerImpl implements PulsarProducer {
   private AtomicBoolean closed;
   private Handler<Throwable> exceptionHandler;
   private Handler<Void> drainHandler;
+  private Producer producer;
 
 
   PulsarProducerImpl(
@@ -41,7 +40,7 @@ public class PulsarProducerImpl implements PulsarProducer {
       if (this.options.getProducerName() != null)
         producerBuilder.producerName(this.options.getProducerName());
 
-      if(this.options.isEnableBatching()){
+      if (this.options.isEnableBatching()) {
         producerBuilder.enableBatching(true);
         if (this.options.getBatchingMaxMessages() > 0)
           producerBuilder.batchingMaxMessages(this.options.getBatchingMaxMessages());
@@ -55,28 +54,45 @@ public class PulsarProducerImpl implements PulsarProducer {
 
       if (this.options.getSendTimeout() > 0)
         producerBuilder.sendTimeout(this.options.getSendTimeout(), TimeUnit.SECONDS);
+      this.producer = producerBuilder.create();
+
+      this.connection.register(this);
 
       completionHandler.handle(Future.succeededFuture(this));
     } catch (Exception ex) {
       completionHandler.handle(Future.failedFuture(ex));
     }
-
-
   }
 
   @Override
   public PulsarProducer send(PulsarMessage message) {
-    return null;
-  }
-
-  @Override
-  public PulsarProducer sendWithAck(PulsarMessage message, Handler<AsyncResult<Void>> acknowledgementHandler) {
-    return null;
+    return doSend(message, null);
   }
 
   @Override
   public void close(Handler<AsyncResult<Void>> handler) {
-
+    Handler<AsyncResult<Void>> actualHandler;
+    if (handler == null) {
+      actualHandler = x -> { /* NOOP */ };
+    } else {
+      actualHandler = handler;
+    }
+    synchronized (this) {
+      if (closed.get()) {
+        actualHandler.handle(Future.succeededFuture());
+        return;
+      }
+      closed.set(false);
+    }
+    connection.unregister(this);
+    connection.runWithTrampoline(x->{
+      try {
+        producer.close();
+        actualHandler.handle(Future.succeededFuture());
+      }catch (Exception ex){
+        actualHandler.handle(Future.failedFuture(ex));
+      }
+    });
   }
 
   @Override
@@ -97,8 +113,7 @@ public class PulsarProducerImpl implements PulsarProducer {
 
   @Override
   public PulsarProducer write(PulsarMessage message) {
-    // TODO: Add send method here
-    return this;
+    return doSend(message, null);
   }
 
   @Override
@@ -118,6 +133,26 @@ public class PulsarProducerImpl implements PulsarProducer {
 
   @Override
   public PulsarProducer drainHandler(@Nullable Handler<Void> handler) {
+    this.drainHandler = handler;
+    return this;
+  }
+
+  private PulsarProducer doSend(PulsarMessage message, Handler<AsyncResult<Void>> acknowledgmentHandler) {
+
+    synchronized (this) {
+      //      remoteCredit--;
+    }
+
+    connection.runWithTrampoline(x -> {
+      try {
+        MessageId messageId = producer.send(message);
+        // Check how pulsar notify the producer about message delivery.
+
+      } catch (PulsarClientException e) {
+        acknowledgmentHandler.handle(Future.failedFuture(e));
+      }
+
+    });
     return this;
   }
 }

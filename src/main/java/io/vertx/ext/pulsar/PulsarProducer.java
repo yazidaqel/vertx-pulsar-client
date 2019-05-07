@@ -11,9 +11,6 @@ public interface PulsarProducer extends WriteStream<PulsarMessage> {
 
   PulsarProducer send(PulsarMessage message);
 
-  @Fluent
-  PulsarProducer sendWithAck(PulsarMessage message, Handler<AsyncResult<Void>> acknowledgementHandler);
-
   void close(Handler<AsyncResult<Void>> handler);
 
   String topic();

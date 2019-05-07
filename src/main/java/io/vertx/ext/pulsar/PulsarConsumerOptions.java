@@ -1,6 +1,7 @@
 package io.vertx.ext.pulsar;
 
 import io.vertx.codegen.annotations.DataObject;
+import io.vertx.core.json.JsonObject;
 
 @DataObject(generateConverter = true)
 public class PulsarConsumerOptions {
@@ -9,6 +10,14 @@ public class PulsarConsumerOptions {
   private String subscriptionName;
   private long ackTimeout;
   private String subscriptionType;
+
+  PulsarConsumerOptions(){
+    super();
+  }
+
+  PulsarConsumerOptions(JsonObject jsonObject){
+
+  }
 
   public String getTopic() {
     return topic;
