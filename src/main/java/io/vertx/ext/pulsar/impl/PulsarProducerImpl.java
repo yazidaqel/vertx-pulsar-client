@@ -24,15 +24,16 @@ import io.vertx.ext.pulsar.PulsarMessage;
 import io.vertx.ext.pulsar.PulsarProducer;
 import io.vertx.ext.pulsar.PulsarProducerOptions;
 import org.apache.pulsar.client.api.*;
+import org.apache.pulsar.client.impl.schema.JSONSchema;
 
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-public class PulsarProducerImpl implements PulsarProducer {
+public class PulsarProducerImpl<T> implements PulsarProducer<T> {
 
-  private final PulsarConnectionImpl connection;
-  private final PulsarProducerOptions options;
-  private final String topic;
+  private PulsarConnectionImpl connection;
+  private PulsarProducerOptions options;
+  private String topic;
   private AtomicBoolean closed;
   private Handler<Throwable> exceptionHandler;
   private Handler<Void> drainHandler;
@@ -41,6 +42,18 @@ public class PulsarProducerImpl implements PulsarProducer {
 
   PulsarProducerImpl(
     String topic,
+    Class<T> classSchema,
+    PulsarConnectionImpl connection,
+    PulsarProducerOptions options,
+    Handler<AsyncResult<PulsarProducer>> completionHandler
+  ) {
+    Schema<T> schema = JSONSchema.of(classSchema);
+    new PulsarProducerImpl(topic, schema, connection, options, completionHandler);
+  }
+
+  PulsarProducerImpl(
+    String topic,
+    Schema<T> schema,
     PulsarConnectionImpl connection,
     PulsarProducerOptions options,
     Handler<AsyncResult<PulsarProducer>> completionHandler
@@ -50,7 +63,7 @@ public class PulsarProducerImpl implements PulsarProducer {
     this.topic = options.getTopic() != null ? options.getTopic() : topic;
     PulsarClient pulsarClient = this.connection.connection();
     try {
-      ProducerBuilder producerBuilder = pulsarClient.newProducer();
+      ProducerBuilder producerBuilder = pulsarClient.newProducer(schema);
       producerBuilder.topic(this.topic);
       if (this.options.getProducerName() != null)
         producerBuilder.producerName(this.options.getProducerName());
@@ -69,12 +82,15 @@ public class PulsarProducerImpl implements PulsarProducer {
 
       if (this.options.getSendTimeout() > 0)
         producerBuilder.sendTimeout(this.options.getSendTimeout(), TimeUnit.SECONDS);
+
       this.producer = producerBuilder.create();
 
       this.connection.register(this);
 
       completionHandler.handle(Future.succeededFuture(this));
     } catch (Exception ex) {
+      if(exceptionHandler != null)
+        exceptionHandler.handle(ex);
       completionHandler.handle(Future.failedFuture(ex));
     }
   }

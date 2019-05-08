@@ -19,73 +19,25 @@ import io.vertx.core.buffer.Buffer;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.pulsar.PulsarMessage;
+import org.apache.pulsar.client.api.Message;
 
-// TODO: Manage pulsar messages and choose a generic format for communication.
-// bytes can be used or a generic schema where the body is always bytes using JsonObject conversion
-public class PulsarMessageImpl implements PulsarMessage {
+public class PulsarMessageImpl<T> implements PulsarMessage<T> {
 
-  @Override
-  public String topic() {
-    return null;
+  private final Class<T> type;
+  private Message<T> message;
+
+  public PulsarMessageImpl(Class<T> type){
+    this.type = type;
+  }
+
+  public PulsarMessageImpl(Class<T> type, Message<T> message){
+    this.type = type;
+    this.message = message;
   }
 
   @Override
-  public boolean bodyAsBoolean() {
-    return false;
+  public T body() {
+    return message.getValue();
   }
 
-  @Override
-  public byte bodyAsByte() {
-    return 0;
-  }
-
-  @Override
-  public short bodyAsShort() {
-    return 0;
-  }
-
-  @Override
-  public int bodyAsInteger() {
-    return 0;
-  }
-
-  @Override
-  public long bodyAsLong() {
-    return 0;
-  }
-
-  @Override
-  public float bodyAsFloat() {
-    return 0;
-  }
-
-  @Override
-  public double bodyAsDouble() {
-    return 0;
-  }
-
-  @Override
-  public char bodyAsChar() {
-    return 0;
-  }
-
-  @Override
-  public Buffer bodyAsBinary() {
-    return null;
-  }
-
-  @Override
-  public String bodyAsString() {
-    return null;
-  }
-
-  @Override
-  public JsonObject bodyAsJsonObject() {
-    return null;
-  }
-
-  @Override
-  public JsonArray bodyAsJsonArray() {
-    return null;
-  }
 }

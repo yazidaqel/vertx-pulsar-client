@@ -17,18 +17,31 @@ package io.vertx.ext.pulsar;
 
 import io.vertx.core.Context;
 import io.vertx.core.Vertx;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.CountDownLatch;
 
 public class PulsarUsage {
+  private static Logger LOGGER = LoggerFactory.getLogger(PulsarUsage.class);
 
   private final Context context;
+  private PulsarClient client;
+  private PulsarConnection connection;
 
   public PulsarUsage(Vertx vertx, String host, int port) {
     CountDownLatch latch = new CountDownLatch(1);
     this.context = vertx.getOrCreateContext();
     context.runOnContext(x -> {
-      
+      client = PulsarClient.create(vertx, null);
+      client.connect(handler -> {
+        if (handler.succeeded()) {
+          LOGGER.info("Connection to the Pulsar succeeded");
+          this.connection = handler.result();
+        } else {
+
+        }
+      });
     });
     try {
       latch.await();

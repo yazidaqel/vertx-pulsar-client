@@ -16,6 +16,7 @@
 package io.vertx.ext.pulsar;
 
 import io.vertx.core.Vertx;
+import org.junit.Before;
 import org.junit.ClassRule;
 import org.testcontainers.containers.GenericContainer;
 
@@ -33,5 +34,16 @@ public class PulsarTestBase {
   private Vertx vertx;
   String host;
   int port;
+  PulsarUsage usage;
+
+  @Before
+  public void setup() {
+    vertx = Vertx.vertx();
+    host = pulsar.getContainerIpAddress();
+    port = pulsar.getMappedPort(6650);
+    System.setProperty("pulsar-host", host);
+    System.setProperty("pulsar-port", Integer.toString(port));
+    usage = new PulsarUsage(vertx, host, port);
+  }
 
 }

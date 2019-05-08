@@ -30,7 +30,7 @@ public class ConnectionTest extends PulsarTestBase {
   private Vertx vertx;
 
   @Before
-  private void init() {
+  public void init() {
     vertx = Vertx.vertx();
   }
   @After

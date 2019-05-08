@@ -29,19 +29,14 @@ public interface PulsarConnection {
   @Fluent
   PulsarConnection close(Handler<AsyncResult<Void>> done);
 
-  @Fluent
-  PulsarConnection createConsumer(String address, Handler<AsyncResult<PulsarConsumer>> completionHandler);
-
-  @Fluent
-  PulsarConnection createConsumer(String address, PulsarConsumerOptions options,
+  PulsarConnection createConsumer(String address,
+                                  PulsarConsumerOptions options,
                                   Handler<AsyncResult<PulsarConsumer>> completionHandler);
 
   @Fluent
-  PulsarConnection createConsumer(String address, PulsarConsumerOptions options, Handler<PulsarMessage> messageHandler,
-                                  Handler<AsyncResult<PulsarConsumer>> completionHandler);
-
-  @Fluent
-  PulsarConnection createConsumer(String address, Handler<PulsarMessage> messageHandler,
+  PulsarConnection createConsumer(String address,
+                                  PulsarConsumerOptions options,
+                                  Handler<PulsarMessage> messageHandler,
                                   Handler<AsyncResult<PulsarConsumer>> completionHandler);
 
   @Fluent
@@ -50,5 +45,8 @@ public interface PulsarConnection {
   @Fluent
   PulsarConnection createProducer(String address, PulsarProducerOptions options,
                                   Handler<AsyncResult<PulsarProducer>> completionHandler);
+
+  @Fluent
+  public PulsarConnection createProducer(String topic,Class classSchema , PulsarProducerOptions options, Handler<AsyncResult<PulsarProducer>> completionHandler);
 
 }

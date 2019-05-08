@@ -22,7 +22,7 @@ import io.vertx.core.Handler;
 import io.vertx.core.streams.ReadStream;
 
 @VertxGen
-public interface PulsarConsumer extends ReadStream<PulsarMessage> {
+public interface PulsarConsumer<T> extends ReadStream<PulsarMessage<T>> {
 
   @CacheReturn
   String topic();

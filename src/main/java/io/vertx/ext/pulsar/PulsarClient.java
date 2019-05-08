@@ -40,11 +40,7 @@ public interface PulsarClient {
   void close(@Nullable Handler<AsyncResult<Void>> closeHandler);
 
   @Fluent
-  PulsarClient createConsumer(String address, Handler<AsyncResult<PulsarConsumer>> completionHandler);
-
-  @Fluent
-  PulsarClient createConsumer(String address, Handler<PulsarMessage> messageHandler,
-                            Handler<AsyncResult<PulsarConsumer>> completionHandler);
+  PulsarClient createConsumer(String topic, PulsarConsumerOptions options, Handler<AsyncResult<PulsarConsumer>> completionHandler);
 
   @Fluent
   PulsarClient createConsumer(String address, PulsarConsumerOptions options,

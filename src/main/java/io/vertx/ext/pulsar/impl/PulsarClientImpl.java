@@ -81,25 +81,14 @@ public class PulsarClientImpl implements PulsarClient {
   }
 
   @Override
-  public PulsarClient createConsumer(String address, Handler<AsyncResult<PulsarConsumer>> completionHandler) {
+  public PulsarClient createConsumer(String topic, PulsarConsumerOptions options, Handler<AsyncResult<PulsarConsumer>> completionHandler) {
       return connect(res -> {
         if (res.failed()) {
           completionHandler.handle(res.mapEmpty());
         } else {
-          res.result().createConsumer(address, completionHandler);
+          res.result().createConsumer(topic, options, completionHandler);
         }
       });
-  }
-
-  @Override
-  public PulsarClient createConsumer(String address, Handler<PulsarMessage> messageHandler, Handler<AsyncResult<PulsarConsumer>> completionHandler) {
-    return connect(res -> {
-      if (res.failed()) {
-        completionHandler.handle(res.mapEmpty());
-      } else {
-        res.result().createConsumer(address, messageHandler, completionHandler);
-      }
-    });
   }
 
   @Override

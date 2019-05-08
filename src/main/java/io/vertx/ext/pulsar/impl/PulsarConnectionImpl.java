@@ -18,6 +18,7 @@ package io.vertx.ext.pulsar.impl;
 import io.vertx.core.*;
 import io.vertx.ext.pulsar.*;
 import org.apache.pulsar.client.api.PulsarClient;
+import org.apache.pulsar.client.api.Schema;
 
 import java.util.List;
 import java.util.Objects;
@@ -53,7 +54,6 @@ public class PulsarConnectionImpl implements PulsarConnection {
 
   private void connect(PulsarClientImpl client, Handler<AsyncResult<PulsarConnection>> connectionHandler) {
     try {
-
       if (connection.get() != null && !closed.get()) {
         connectionHandler.handle(Future.failedFuture("Already connected"));
         return;
@@ -63,12 +63,12 @@ public class PulsarConnectionImpl implements PulsarConnection {
         .build();
 
       connection.set(pulsarClient);
-      closed.set(false);
       client.register(this);
+      closed.set(false);
     } catch (Exception ex) {
+      if (exceptionHandler != null)
+        exceptionHandler.handle(ex);
       connectionHandler.handle(Future.failedFuture(ex));
-    } finally {
-      closed.set(true);
     }
   }
 
@@ -98,17 +98,12 @@ public class PulsarConnectionImpl implements PulsarConnection {
           }
         });
       } catch (Exception ex) {
-        done.handle(Future.failedFuture(ex));
+        exceptionHandler.handle(ex);
       } finally {
         closed.set(true);
       }
     });
     return this;
-  }
-
-  @Override
-  public PulsarConnection createConsumer(String topic, Handler<AsyncResult<PulsarConsumer>> completionHandler) {
-    return createConsumer(topic, completionHandler);
   }
 
   @Override
@@ -121,13 +116,12 @@ public class PulsarConnectionImpl implements PulsarConnection {
   }
 
   @Override
-  public PulsarConnection createConsumer(String address, PulsarConsumerOptions options, Handler<PulsarMessage> messageHandler, Handler<AsyncResult<PulsarConsumer>> completionHandler) {
-    return null;
-  }
-
-  @Override
-  public PulsarConnection createConsumer(String address, Handler<PulsarMessage> messageHandler, Handler<AsyncResult<PulsarConsumer>> completionHandler) {
-    return null;
+  public PulsarConnection createConsumer(String topic, PulsarConsumerOptions options, Handler<PulsarMessage> messageHandler, Handler<AsyncResult<PulsarConsumer>> completionHandler) {
+    PulsarConsumerOptions pulsarConsumerOptions = options == null ? new PulsarConsumerOptions() : options;
+    runWithTrampoline(x -> {
+      new PulsarConsumerImpl(topic, this, pulsarConsumerOptions, messageHandler, completionHandler);
+    });
+    return this;
   }
 
   @Override
@@ -139,7 +133,16 @@ public class PulsarConnectionImpl implements PulsarConnection {
   public PulsarConnection createProducer(String topic, PulsarProducerOptions options, Handler<AsyncResult<PulsarProducer>> completionHandler) {
     PulsarProducerOptions pulsarProducerOptions = options == null ? new PulsarProducerOptions() : options;
     runWithTrampoline(x -> {
-      new PulsarProducerImpl(topic, this, pulsarProducerOptions, completionHandler);
+      new PulsarProducerImpl(topic, Schema.BYTES,this, pulsarProducerOptions, completionHandler);
+    });
+    return this;
+  }
+
+  @Override
+  public PulsarConnection createProducer(String topic,Class classSchema , PulsarProducerOptions options, Handler<AsyncResult<PulsarProducer>> completionHandler) {
+    PulsarProducerOptions pulsarProducerOptions = options == null ? new PulsarProducerOptions() : options;
+    runWithTrampoline(x -> {
+      new PulsarProducerImpl(topic, classSchema,this, pulsarProducerOptions, completionHandler);
     });
     return this;
   }
@@ -160,21 +163,23 @@ public class PulsarConnectionImpl implements PulsarConnection {
     return connection.get();
   }
 
-  protected boolean isClosed(){
+  protected boolean isClosed() {
     return closed.get();
   }
 
-  protected void register(PulsarConsumer consumer){
+  protected void register(PulsarConsumer consumer) {
     consumers.add(consumer);
   }
-  protected void register(PulsarProducer producer){
+
+  protected void register(PulsarProducer producer) {
     producers.add(producer);
   }
 
-  protected void unregister(PulsarConsumer consumer){
+  protected void unregister(PulsarConsumer consumer) {
     consumers.remove(consumer);
   }
-  protected void unregister(PulsarProducer producer){
+
+  protected void unregister(PulsarProducer producer) {
     producers.remove(producer);
   }
 }

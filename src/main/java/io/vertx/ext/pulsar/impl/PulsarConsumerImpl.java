@@ -28,7 +28,7 @@ import org.apache.pulsar.client.api.*;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
-public class PulsarConsumerImpl implements PulsarConsumer {
+public class PulsarConsumerImpl<T> implements PulsarConsumer<T> {
 
   private final PulsarConnectionImpl connection;
   private String topic;
@@ -36,7 +36,7 @@ public class PulsarConsumerImpl implements PulsarConsumer {
   private AtomicLong demand = new AtomicLong();
 
   private Handler<Throwable> exceptionHandler;
-  private Handler<PulsarMessage> handler;
+  private Handler<PulsarMessage<T>> handler;
   private Handler<Void> endHandler;
   private Consumer consumer;
 
@@ -44,7 +44,7 @@ public class PulsarConsumerImpl implements PulsarConsumer {
     String topic,
     PulsarConnectionImpl connection,
     PulsarConsumerOptions options,
-    Handler<PulsarMessage> handler,
+    Handler<PulsarMessage<T>> handler,
     Handler<AsyncResult<PulsarConsumer>> completionHandler
   ) {
     this.topic = options.getTopic() != null ? options.getTopic() : topic;
@@ -63,7 +63,7 @@ public class PulsarConsumerImpl implements PulsarConsumer {
         consumerBuilder.subscriptionType(SubscriptionType.valueOf(options.getSubscriptionType()));
 
       this.consumer = consumerBuilder.subscribe();
-
+      this.connection.register(this);
       completionHandler.handle(Future.succeededFuture(this));
       closed = false;
       demand.set(Long.MAX_VALUE);
@@ -80,9 +80,10 @@ public class PulsarConsumerImpl implements PulsarConsumer {
             this.consumer.acknowledge(message);
           }
         } catch (PulsarClientException e) {
-          exceptionHandler.handle(e);
+          if (exceptionHandler != null)
+            exceptionHandler.handle(e);
         }
-      } while (!connection.isClosed() && !this.demand.compareAndSet(v, v-1));
+      } while (!connection.isClosed() && !this.demand.compareAndSet(v, v - 1));
 
     } catch (Exception e) {
       completionHandler.handle(Future.failedFuture(e));
@@ -128,7 +129,7 @@ public class PulsarConsumerImpl implements PulsarConsumer {
   }
 
   @Override
-  public PulsarConsumer handler(@Nullable Handler<PulsarMessage> handler) {
+  public PulsarConsumer<T> handler(@Nullable Handler<PulsarMessage<T>> handler) {
     this.handler = handler;
     return this;
   }

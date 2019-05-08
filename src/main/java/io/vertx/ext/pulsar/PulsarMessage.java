@@ -22,36 +22,7 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.ext.pulsar.impl.PulsarMessageImpl;
 
 @VertxGen
-public interface PulsarMessage {
+public interface PulsarMessage<T> {
 
-  static PulsarMessage create() {
-    return new PulsarMessageImpl();
-  }
-
-  String topic();
-
-  boolean bodyAsBoolean();
-
-  byte bodyAsByte();
-
-  short bodyAsShort();
-
-  int bodyAsInteger();
-
-  long bodyAsLong();
-
-  float bodyAsFloat();
-
-  double bodyAsDouble();
-
-  char bodyAsChar();
-
-  Buffer bodyAsBinary();
-
-  String bodyAsString();
-
-  JsonObject bodyAsJsonObject();
-
-  JsonArray bodyAsJsonArray();
-
+  T body();
 }
