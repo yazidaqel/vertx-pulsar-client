@@ -15,23 +15,14 @@
  */
 package io.vertx.ext.pulsar.impl;
 
-import io.vertx.core.buffer.Buffer;
-import io.vertx.core.json.JsonArray;
-import io.vertx.core.json.JsonObject;
 import io.vertx.ext.pulsar.PulsarMessage;
 import org.apache.pulsar.client.api.Message;
 
 public class PulsarMessageImpl<T> implements PulsarMessage<T> {
 
-  private final Class<T> type;
   private Message<T> message;
 
-  public PulsarMessageImpl(Class<T> type){
-    this.type = type;
-  }
-
-  public PulsarMessageImpl(Class<T> type, Message<T> message){
-    this.type = type;
+  public PulsarMessageImpl(Message<T> message){
     this.message = message;
   }
 

@@ -82,13 +82,24 @@ public class PulsarClientImpl implements PulsarClient {
 
   @Override
   public PulsarClient createConsumer(String topic, PulsarConsumerOptions options, Handler<AsyncResult<PulsarConsumer>> completionHandler) {
-      return connect(res -> {
-        if (res.failed()) {
-          completionHandler.handle(res.mapEmpty());
-        } else {
-          res.result().createConsumer(topic, options, completionHandler);
-        }
-      });
+    return connect(res -> {
+      if (res.failed()) {
+        completionHandler.handle(res.mapEmpty());
+      } else {
+        res.result().createConsumer(topic, options, completionHandler);
+      }
+    });
+  }
+
+  @Override
+  public PulsarClient createConsumer(String topic, Class classSchema, PulsarConsumerOptions options, Handler<AsyncResult<PulsarConsumer>> completionHandler) {
+    return connect(res -> {
+      if (res.failed()) {
+        completionHandler.handle(res.mapEmpty());
+      } else {
+        res.result().createConsumer(topic, classSchema, options, completionHandler);
+      }
+    });
   }
 
   @Override
@@ -97,7 +108,7 @@ public class PulsarClientImpl implements PulsarClient {
       if (res.failed()) {
         completionHandler.handle(res.mapEmpty());
       } else {
-        res.result().createConsumer(address,options, messageHandler, completionHandler);
+        res.result().createConsumer(address, options, messageHandler, completionHandler);
       }
     });
   }
@@ -119,7 +130,18 @@ public class PulsarClientImpl implements PulsarClient {
       if (res.failed()) {
         completionHandler.handle(res.mapEmpty());
       } else {
-        res.result().createProducer(address, options,completionHandler);
+        res.result().createProducer(address, options, completionHandler);
+      }
+    });
+  }
+
+  @Override
+  public PulsarClient createProducer(String topic, Class classSchema, PulsarProducerOptions options, Handler<AsyncResult<PulsarProducer>> completionHandler) {
+    return connect(res -> {
+      if (res.failed()) {
+        completionHandler.handle(res.mapEmpty());
+      } else {
+        res.result().createProducer(topic, classSchema, options, completionHandler);
       }
     });
   }

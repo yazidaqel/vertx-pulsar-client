@@ -16,6 +16,8 @@
 package io.vertx.ext.pulsar.impl;
 
 import io.vertx.core.*;
+import io.vertx.core.impl.logging.Logger;
+import io.vertx.core.impl.logging.LoggerFactory;
 import io.vertx.ext.pulsar.*;
 import org.apache.pulsar.client.api.PulsarClient;
 import org.apache.pulsar.client.api.Schema;
@@ -28,6 +30,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class PulsarConnectionImpl implements PulsarConnection {
+
+  private static final Logger logger = LoggerFactory.getLogger(PulsarConnectionImpl.class);
 
   private final AtomicBoolean closed = new AtomicBoolean();
 
@@ -47,6 +51,8 @@ public class PulsarConnectionImpl implements PulsarConnection {
     this.context = context;
     this.serviceUrl = "pulsar://" + this.options.getHost() + ":" + this.options.getPort();
 
+    logger.debug("Connecting to = "+this.serviceUrl);
+
     runOnContext(x -> connect(client,
       Objects.requireNonNull(connectionHandler, "connection handler cannot be `null`"))
     );
@@ -54,17 +60,21 @@ public class PulsarConnectionImpl implements PulsarConnection {
 
   private void connect(PulsarClientImpl client, Handler<AsyncResult<PulsarConnection>> connectionHandler) {
     try {
+      logger.info("Calling connect");
       if (connection.get() != null && !closed.get()) {
-        connectionHandler.handle(Future.failedFuture("Already connected"));
+        logger.debug("Already connected");
+        connectionHandler.handle(Future.succeededFuture(this));
         return;
       }
       PulsarClient pulsarClient = PulsarClient.builder()
         .serviceUrl(this.serviceUrl)
         .build();
-
+      logger.debug("Connected");
       connection.set(pulsarClient);
       client.register(this);
       closed.set(false);
+      logger.info("Connected & Registered");
+      connectionHandler.handle(Future.succeededFuture(this));
     } catch (Exception ex) {
       if (exceptionHandler != null)
         exceptionHandler.handle(ex);
@@ -107,10 +117,19 @@ public class PulsarConnectionImpl implements PulsarConnection {
   }
 
   @Override
+  public PulsarConnection createConsumer(String topic, Class classSchema, PulsarConsumerOptions options, Handler<AsyncResult<PulsarConsumer>> completionHandler) {
+    PulsarConsumerOptions pulsarConsumerOptions = options == null ? new PulsarConsumerOptions() : options;
+    runWithTrampoline(x -> {
+      new PulsarConsumerImpl(topic, classSchema, this, pulsarConsumerOptions, null, completionHandler);
+    });
+    return this;
+  }
+
+  @Override
   public PulsarConnection createConsumer(String topic, PulsarConsumerOptions options, Handler<AsyncResult<PulsarConsumer>> completionHandler) {
     PulsarConsumerOptions pulsarConsumerOptions = options == null ? new PulsarConsumerOptions() : options;
     runWithTrampoline(x -> {
-      new PulsarConsumerImpl(topic, this, pulsarConsumerOptions, null, completionHandler);
+      new PulsarConsumerImpl(topic, Schema.BYTES, this, pulsarConsumerOptions, null, completionHandler);
     });
     return this;
   }
@@ -119,7 +138,7 @@ public class PulsarConnectionImpl implements PulsarConnection {
   public PulsarConnection createConsumer(String topic, PulsarConsumerOptions options, Handler<PulsarMessage> messageHandler, Handler<AsyncResult<PulsarConsumer>> completionHandler) {
     PulsarConsumerOptions pulsarConsumerOptions = options == null ? new PulsarConsumerOptions() : options;
     runWithTrampoline(x -> {
-      new PulsarConsumerImpl(topic, this, pulsarConsumerOptions, messageHandler, completionHandler);
+      new PulsarConsumerImpl(topic, Schema.BYTES, this, pulsarConsumerOptions, messageHandler, completionHandler);
     });
     return this;
   }
@@ -133,16 +152,16 @@ public class PulsarConnectionImpl implements PulsarConnection {
   public PulsarConnection createProducer(String topic, PulsarProducerOptions options, Handler<AsyncResult<PulsarProducer>> completionHandler) {
     PulsarProducerOptions pulsarProducerOptions = options == null ? new PulsarProducerOptions() : options;
     runWithTrampoline(x -> {
-      new PulsarProducerImpl(topic, Schema.BYTES,this, pulsarProducerOptions, completionHandler);
+      new PulsarProducerImpl(topic, Schema.BYTES, this, pulsarProducerOptions, completionHandler);
     });
     return this;
   }
 
   @Override
-  public PulsarConnection createProducer(String topic,Class classSchema , PulsarProducerOptions options, Handler<AsyncResult<PulsarProducer>> completionHandler) {
+  public PulsarConnection createProducer(String topic, Class classSchema, PulsarProducerOptions options, Handler<AsyncResult<PulsarProducer>> completionHandler) {
     PulsarProducerOptions pulsarProducerOptions = options == null ? new PulsarProducerOptions() : options;
     runWithTrampoline(x -> {
-      new PulsarProducerImpl(topic, classSchema,this, pulsarProducerOptions, completionHandler);
+      new PulsarProducerImpl(topic, classSchema, this, pulsarProducerOptions, completionHandler);
     });
     return this;
   }

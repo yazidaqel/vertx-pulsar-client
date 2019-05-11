@@ -20,7 +20,10 @@ import io.vertx.core.Vertx;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 public class PulsarUsage {
   private static Logger LOGGER = LoggerFactory.getLogger(PulsarUsage.class);
@@ -28,6 +31,9 @@ public class PulsarUsage {
   private final Context context;
   private PulsarClient client;
   private PulsarConnection connection;
+
+  private List<PulsarProducer> senders = new CopyOnWriteArrayList<>();
+  private List<PulsarConsumer> receivers = new CopyOnWriteArrayList<>();
 
   public PulsarUsage(Vertx vertx, String host, int port) {
     CountDownLatch latch = new CountDownLatch(1);
@@ -41,6 +47,7 @@ public class PulsarUsage {
         } else {
 
         }
+        latch.countDown();
       });
     });
     try {
@@ -49,5 +56,27 @@ public class PulsarUsage {
       Thread.currentThread().interrupt();
       throw new RuntimeException(e);
     }
+  }
+
+  public void close() throws InterruptedException {
+    CountDownLatch entities = new CountDownLatch(senders.size() + receivers.size());
+    context.runOnContext(ignored -> {
+      senders.forEach(sender -> {
+          entities.countDown();
+      });
+      receivers.forEach(receiver -> {
+          entities.countDown();
+      });
+    });
+
+    entities.await(30, TimeUnit.SECONDS);
+
+    if (connection != null) {
+      CountDownLatch latch = new CountDownLatch(1);
+      context.runOnContext(n -> connection.close(x -> latch.countDown()));
+      latch.await(10, TimeUnit.SECONDS);
+    }
+
+
   }
 }

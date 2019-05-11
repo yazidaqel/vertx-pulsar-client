@@ -16,20 +16,23 @@
 package io.vertx.ext.pulsar;
 
 import io.vertx.core.Vertx;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.testcontainers.containers.GenericContainer;
 
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+
 public class PulsarTestBase {
 
-  PulsarClient pulsarClient;
+  PulsarClient client;
 
   @ClassRule
   public static GenericContainer pulsar = new GenericContainer("apachepulsar/pulsar:2.0.1-incubating")
-    .withExposedPorts(6650)
-    .withExposedPorts(8080)
-    .withCommand("bin/pulsar standalone", "-v", "$PWD/data:/pulsar/data")
-    ;
+    .withCommand("-it")
+    .withExposedPorts(6650,8080)
+    .withCommand("bin/pulsar standalone");
 
   private Vertx vertx;
   String host;
@@ -44,6 +47,25 @@ public class PulsarTestBase {
     System.setProperty("pulsar-host", host);
     System.setProperty("pulsar-port", Integer.toString(port));
     usage = new PulsarUsage(vertx, host, port);
+  }
+
+  @After
+  public void tearDown() throws InterruptedException {
+    CountDownLatch latch1 = new CountDownLatch(1);
+    CountDownLatch latch2 = new CountDownLatch(1);
+
+    if (client != null) {
+      client.close(x -> latch1.countDown());
+      latch1.await(10, TimeUnit.SECONDS);
+    }
+
+    System.clearProperty("pulsar-host");
+    System.clearProperty("pulsar-port");
+
+    usage.close();
+    vertx.close(x -> latch2.countDown());
+
+    latch2.await(10, TimeUnit.SECONDS);
   }
 
 }

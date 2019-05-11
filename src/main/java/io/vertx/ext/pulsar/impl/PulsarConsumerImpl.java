@@ -24,6 +24,7 @@ import io.vertx.ext.pulsar.PulsarConsumer;
 import io.vertx.ext.pulsar.PulsarConsumerOptions;
 import io.vertx.ext.pulsar.PulsarMessage;
 import org.apache.pulsar.client.api.*;
+import org.apache.pulsar.client.impl.schema.JSONSchema;
 
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
@@ -31,7 +32,7 @@ import java.util.concurrent.atomic.AtomicLong;
 public class PulsarConsumerImpl<T> implements PulsarConsumer<T> {
 
   private final PulsarConnectionImpl connection;
-  private String topic;
+  private final String topic;
   private boolean closed;
   private AtomicLong demand = new AtomicLong();
 
@@ -40,20 +41,52 @@ public class PulsarConsumerImpl<T> implements PulsarConsumer<T> {
   private Handler<Void> endHandler;
   private Consumer consumer;
 
-  PulsarConsumerImpl(
+  protected PulsarConsumerImpl(
     String topic,
+    Class<T> classSchema,
+    PulsarConnectionImpl connection,
+    PulsarConsumerOptions options,
+    Handler<PulsarMessage<T>> handler,
+    Handler<AsyncResult<PulsarConsumer>> completionHandler
+  ) {
+    Schema<T> schema = JSONSchema.of(classSchema);
+    this.topic = options.getTopic() != null ? options.getTopic() : topic;
+    this.connection = connection;
+    this.handler = handler;
+    init(
+      schema,
+      options,
+      handler,
+      completionHandler
+    );
+  }
+  protected PulsarConsumerImpl(
+    String topic,
+    Schema schema,
     PulsarConnectionImpl connection,
     PulsarConsumerOptions options,
     Handler<PulsarMessage<T>> handler,
     Handler<AsyncResult<PulsarConsumer>> completionHandler
   ) {
     this.topic = options.getTopic() != null ? options.getTopic() : topic;
-    ;
     this.connection = connection;
     this.handler = handler;
+    init(
+      schema,
+      options,
+      handler,
+      completionHandler
+    );
+  }
+
+  void init(Schema schema,
+       PulsarConsumerOptions options,
+       Handler<PulsarMessage<T>> handler,
+       Handler<AsyncResult<PulsarConsumer>> completionHandler){
+
     PulsarClient pulsarClient = connection.connection();
     try {
-      ConsumerBuilder consumerBuilder = pulsarClient.newConsumer();
+      ConsumerBuilder consumerBuilder = pulsarClient.newConsumer(schema);
       consumerBuilder.topic(this.topic);
       consumerBuilder.ackTimeout(options.getAckTimeout(), TimeUnit.SECONDS);
       if (options.getSubscriptionName() != null)
@@ -72,11 +105,9 @@ public class PulsarConsumerImpl<T> implements PulsarConsumer<T> {
         try {
           if (v == 0L)
             continue;
-          // TODO: Add generic type for message and proceed with conversion
           if (this.handler != null) {
-            Message message = this.consumer.receive();
-            // TODO: Proceed with conversion from this point
-            //this.handler.handle(message.getValue());
+            Message<T> message = this.consumer.receive();
+            this.handler.handle(new PulsarMessageImpl<>(message));
             this.consumer.acknowledge(message);
           }
         } catch (PulsarClientException e) {
@@ -90,6 +121,8 @@ public class PulsarConsumerImpl<T> implements PulsarConsumer<T> {
     }
 
   }
+
+
 
   @Override
   public String topic() {

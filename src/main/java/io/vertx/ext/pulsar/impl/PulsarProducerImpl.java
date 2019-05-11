@@ -176,7 +176,7 @@ public class PulsarProducerImpl<T> implements PulsarProducer<T> {
 
     connection.runWithTrampoline(x -> {
       try {
-        MessageId messageId = producer.send(message);
+        MessageId messageId = producer.send(message.body());
         // Check how pulsar notify the producer about message delivery.
 
       } catch (PulsarClientException e) {

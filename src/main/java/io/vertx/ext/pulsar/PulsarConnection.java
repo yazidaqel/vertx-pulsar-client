@@ -16,6 +16,7 @@
 package io.vertx.ext.pulsar;
 
 import io.vertx.codegen.annotations.Fluent;
+import io.vertx.codegen.annotations.GenIgnore;
 import io.vertx.codegen.annotations.VertxGen;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
@@ -29,6 +30,7 @@ public interface PulsarConnection {
   @Fluent
   PulsarConnection close(Handler<AsyncResult<Void>> done);
 
+  @Fluent
   PulsarConnection createConsumer(String address,
                                   PulsarConsumerOptions options,
                                   Handler<AsyncResult<PulsarConsumer>> completionHandler);
@@ -39,14 +41,25 @@ public interface PulsarConnection {
                                   Handler<PulsarMessage> messageHandler,
                                   Handler<AsyncResult<PulsarConsumer>> completionHandler);
 
-  @Fluent
-  PulsarConnection createProducer(String address, Handler<AsyncResult<PulsarProducer>> completionHandler);
+  @GenIgnore
+  PulsarConnection createConsumer(String topic,
+                                  Class classSchema,
+                                  PulsarConsumerOptions options,
+                                  Handler<AsyncResult<PulsarConsumer>> completionHandler);
 
   @Fluent
-  PulsarConnection createProducer(String address, PulsarProducerOptions options,
+  PulsarConnection createProducer(String address,
                                   Handler<AsyncResult<PulsarProducer>> completionHandler);
 
   @Fluent
-  public PulsarConnection createProducer(String topic,Class classSchema , PulsarProducerOptions options, Handler<AsyncResult<PulsarProducer>> completionHandler);
+  PulsarConnection createProducer(String address,
+                                  PulsarProducerOptions options,
+                                  Handler<AsyncResult<PulsarProducer>> completionHandler);
+
+  @GenIgnore
+  public PulsarConnection createProducer(String topic,
+                                         Class classSchema,
+                                         PulsarProducerOptions options,
+                                         Handler<AsyncResult<PulsarProducer>> completionHandler);
 
 }

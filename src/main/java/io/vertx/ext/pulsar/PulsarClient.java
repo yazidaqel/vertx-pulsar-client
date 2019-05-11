@@ -16,12 +16,14 @@
 package io.vertx.ext.pulsar;
 
 import io.vertx.codegen.annotations.Fluent;
+import io.vertx.codegen.annotations.GenIgnore;
 import io.vertx.codegen.annotations.Nullable;
 import io.vertx.codegen.annotations.VertxGen;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.ext.pulsar.impl.PulsarClientImpl;
+import io.vertx.ext.pulsar.impl.PulsarConsumerImpl;
 
 import java.util.Objects;
 
@@ -40,18 +42,36 @@ public interface PulsarClient {
   void close(@Nullable Handler<AsyncResult<Void>> closeHandler);
 
   @Fluent
-  PulsarClient createConsumer(String topic, PulsarConsumerOptions options, Handler<AsyncResult<PulsarConsumer>> completionHandler);
+  PulsarClient createConsumer(String topic,
+                              PulsarConsumerOptions options,
+                              Handler<AsyncResult<PulsarConsumer>> completionHandler);
+
+  @GenIgnore
+  PulsarClient createConsumer(String topic,
+                              Class classSchema,
+                              PulsarConsumerOptions options,
+                              Handler<AsyncResult<PulsarConsumer>> completionHandler);
 
   @Fluent
-  PulsarClient createConsumer(String address, PulsarConsumerOptions options,
-                            Handler<PulsarMessage> messageHandler,
-                            Handler<AsyncResult<PulsarConsumer>> completionHandler);
+  PulsarClient createConsumer(String address,
+                              PulsarConsumerOptions options,
+                              Handler<PulsarMessage> messageHandler,
+                              Handler<AsyncResult<PulsarConsumer>> completionHandler);
 
   @Fluent
-  PulsarClient createProducer(String address, Handler<AsyncResult<PulsarProducer>> completionHandler);
+  PulsarClient createProducer(String address,
+                              Handler<AsyncResult<PulsarProducer>> completionHandler);
 
   @Fluent
-  PulsarClient createProducer(String address, PulsarProducerOptions options,
-                                Handler<AsyncResult<PulsarProducer>> completionHandler);
+  PulsarClient createProducer(String address,
+                              PulsarProducerOptions options,
+                              Handler<AsyncResult<PulsarProducer>> completionHandler);
+
+  @GenIgnore
+  PulsarClient createProducer(String topic,
+                              Class classSchema,
+                              PulsarProducerOptions options,
+                              Handler<AsyncResult<PulsarProducer>> completionHandler);
+
 
 }

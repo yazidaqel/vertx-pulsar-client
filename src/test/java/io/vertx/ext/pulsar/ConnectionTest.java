@@ -16,6 +16,8 @@
 package io.vertx.ext.pulsar;
 
 import io.vertx.core.Vertx;
+import io.vertx.core.impl.logging.Logger;
+import io.vertx.core.impl.logging.LoggerFactory;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -27,12 +29,15 @@ import static org.hamcrest.Matchers.is;
 
 public class ConnectionTest extends PulsarTestBase {
 
+  private static final Logger logger = LoggerFactory.getLogger(ConnectionTest.class);
+
   private Vertx vertx;
 
   @Before
   public void init() {
     vertx = Vertx.vertx();
   }
+
   @After
   public void destroy() {
     vertx.close();
@@ -41,11 +46,15 @@ public class ConnectionTest extends PulsarTestBase {
   @Test
   public void testConnectionSuccessWithDetailsPassedInOptions() {
     AtomicBoolean done = new AtomicBoolean();
-    pulsarClient = PulsarClient.create(new PulsarClientOptions()
+    logger.debug("testConnectionSuccessWithDetailsPassedInOptions");
+    client = PulsarClient.create(new PulsarClientOptions()
       .setHost(host)
       .setPort(port)
     ).connect(
-      ar -> done.set(ar.succeeded())
+      handler -> {
+        logger.debug(handler.succeeded());
+        done.set(handler.succeeded());
+      }
     );
 
     await().untilAtomic(done, is(true));
