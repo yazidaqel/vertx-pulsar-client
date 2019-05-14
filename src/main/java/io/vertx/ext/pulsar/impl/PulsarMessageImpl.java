@@ -15,6 +15,7 @@
  */
 package io.vertx.ext.pulsar.impl;
 
+import io.vertx.core.json.JsonObject;
 import io.vertx.ext.pulsar.PulsarMessage;
 import org.apache.pulsar.client.api.Message;
 
@@ -22,13 +23,16 @@ public class PulsarMessageImpl<T> implements PulsarMessage<T> {
 
   private Message<T> message;
 
-  public PulsarMessageImpl(Message<T> message){
-    this.message = message;
+  private T value;
+
+
+  public PulsarMessageImpl(T value){
+    this.value = value;
   }
 
   @Override
   public T body() {
-    return message.getValue();
+    return value;
   }
 
 }

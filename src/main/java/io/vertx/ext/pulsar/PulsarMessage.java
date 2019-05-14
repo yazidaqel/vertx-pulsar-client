@@ -17,12 +17,17 @@ package io.vertx.ext.pulsar;
 
 import io.vertx.codegen.annotations.VertxGen;
 import io.vertx.core.buffer.Buffer;
+import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.pulsar.impl.PulsarMessageImpl;
 
 @VertxGen
 public interface PulsarMessage<T> {
+
+  public static PulsarMessage create(JsonObject jsonObject){
+    return new PulsarMessageImpl(jsonObject);
+  }
 
   T body();
 }

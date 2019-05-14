@@ -24,12 +24,13 @@ import org.junit.Test;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 import static org.hamcrest.Matchers.is;
 
-public class ConnectionTest extends PulsarTestBase {
+public class PulsarConnectionTest extends PulsarTestBase {
 
-  private static final Logger logger = LoggerFactory.getLogger(ConnectionTest.class);
+  private static final Logger logger = LoggerFactory.getLogger(PulsarConnectionTest.class);
 
   private Vertx vertx;
 
@@ -59,6 +60,5 @@ public class ConnectionTest extends PulsarTestBase {
 
     await().untilAtomic(done, is(true));
   }
-
 
 }
