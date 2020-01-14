@@ -29,7 +29,7 @@ public class PulsarTestBase {
   PulsarClient client;
 
   @ClassRule
-  public static GenericContainer pulsar = new GenericContainer("apachepulsar/pulsar:2.0.1-incubating")
+  public static GenericContainer pulsar = new GenericContainer("apachepulsar/pulsar:2.4.2")
     .withCommand("-it")
     .withExposedPorts(6650,8080)
     .withCommand("bin/pulsar standalone");
