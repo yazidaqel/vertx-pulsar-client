@@ -55,9 +55,9 @@ public class PulsarClientImpl implements PulsarClient {
   public void close(@Nullable Handler<AsyncResult<Void>> handler) {
     List<Future> actions = new ArrayList<>();
     for (PulsarConnection connection : connections) {
-      Future<Void> future = Future.future();
-      connection.close(future);
-      actions.add(future);
+      Promise<Void> promise = Promise.promise();
+      connection.close(promise);
+      actions.add(promise.future());
     }
 
     CompositeFuture.join(actions).setHandler(done -> {

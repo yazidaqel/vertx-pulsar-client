@@ -21,10 +21,11 @@ import java.time.Instant;
 import java.time.format.DateTimeFormatter;
 
 /**
- * Converter for {@link io.vertx.ext.pulsar.PulsarClientOptions}.
+ * Converter and mapper for {@link io.vertx.ext.pulsar.PulsarClientOptions}.
  * NOTE: This class has been automatically generated from the {@link io.vertx.ext.pulsar.PulsarClientOptions} original class using Vert.x codegen.
  */
 public class PulsarClientOptionsConverter {
+
 
   public static void fromJson(Iterable<java.util.Map.Entry<String, Object>> json, PulsarClientOptions obj) {
     for (java.util.Map.Entry<String, Object> member : json) {

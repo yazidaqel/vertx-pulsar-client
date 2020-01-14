@@ -21,8 +21,6 @@ import org.apache.pulsar.client.api.Message;
 
 public class PulsarMessageImpl<T> implements PulsarMessage<T> {
 
-  private Message<T> message;
-
   private T value;
 
 

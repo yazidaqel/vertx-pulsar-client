@@ -107,7 +107,7 @@ public class PulsarConsumerImpl<T> implements PulsarConsumer<T> {
             continue;
           if (this.handler != null) {
             Message<T> message = this.consumer.receive();
-            this.handler.handle(new PulsarMessageImpl<>(message));
+            this.handler.handle(new PulsarMessageImpl<T>(message.getValue()));
             this.consumer.acknowledge(message);
           }
         } catch (PulsarClientException e) {

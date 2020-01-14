@@ -19,6 +19,7 @@ import io.vertx.codegen.annotations.Nullable;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
+import io.vertx.core.Promise;
 import io.vertx.ext.pulsar.PulsarConnection;
 import io.vertx.ext.pulsar.PulsarMessage;
 import io.vertx.ext.pulsar.PulsarProducer;
@@ -143,14 +144,22 @@ public class PulsarProducerImpl<T> implements PulsarProducer<T> {
   }
 
   @Override
-  public PulsarProducer write(PulsarMessage message) {
-    return doSend(message, null);
+  public Future<Void> write(PulsarMessage<T> pulsarMessage) {
+    Promise<Void> promise = Promise.promise();
+    doSend(pulsarMessage, promise);
+    return promise.future();
   }
 
   @Override
-  public void end() {
-    close(null);
+  public void write(PulsarMessage<T> pulsarMessage, Handler<AsyncResult<Void>> handler) {
+    doSend(pulsarMessage, handler);
   }
+
+  @Override
+  public void end(Handler<AsyncResult<Void>> handler) {
+      close(null);
+  }
+
 
   @Override
   public PulsarProducer setWriteQueueMaxSize(int i) {
