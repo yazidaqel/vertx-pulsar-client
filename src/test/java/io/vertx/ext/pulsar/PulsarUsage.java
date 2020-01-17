@@ -79,4 +79,12 @@ public class PulsarUsage {
 
 
   }
+
+  public PulsarClient getClient() {
+    return client;
+  }
+
+  public PulsarConnection getConnection() {
+    return connection;
+  }
 }

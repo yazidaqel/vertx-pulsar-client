@@ -68,4 +68,8 @@ public class PulsarTestBase {
     latch2.await(10, TimeUnit.SECONDS);
   }
 
+  public PulsarClient getClient() {
+    return client;
+  }
+
 }

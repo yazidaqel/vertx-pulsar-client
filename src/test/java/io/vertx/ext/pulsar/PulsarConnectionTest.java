@@ -18,6 +18,7 @@ package io.vertx.ext.pulsar;
 import io.vertx.core.Vertx;
 import io.vertx.core.impl.logging.Logger;
 import io.vertx.core.impl.logging.LoggerFactory;
+import io.vertx.ext.unit.TestContext;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -27,6 +28,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 import static org.hamcrest.Matchers.is;
+import static org.junit.Assert.assertTrue;
 
 public class PulsarConnectionTest extends PulsarTestBase {
 
@@ -53,8 +55,17 @@ public class PulsarConnectionTest extends PulsarTestBase {
       .setPort(port)
     ).connect(
       handler -> {
-        logger.debug(handler.succeeded());
-        done.set(handler.succeeded());
+
+        assertTrue(handler.succeeded());
+
+        if(handler.succeeded()){
+          client.close(closeHandler ->{
+            done.set(closeHandler.succeeded());
+            assertTrue(handler.succeeded());
+            done.set(true);
+          });
+        }else
+        done.set(true);
       }
     );
 

@@ -29,6 +29,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import static org.awaitility.Awaitility.await;
 import static org.hamcrest.Matchers.is;
+import static org.junit.Assert.assertTrue;
 
 @RunWith(VertxUnitRunner.class)
 public class PulsarProducerTest extends PulsarTestBase {
@@ -36,26 +37,27 @@ public class PulsarProducerTest extends PulsarTestBase {
   private static final Logger logger = LoggerFactory.getLogger(PulsarProducerTest.class);
 
   @Test(timeout = 20000)
-  public void testProducerWithoutOptions(TestContext context) {
+  public void testProducerWithoutOptions() {
     String topic = UUID.randomUUID().toString();
     String sentContent = "myMessageContent-" + topic;
     AtomicBoolean done = new AtomicBoolean();
 
-    client = PulsarClient.create(null);
-    client.connect(x -> {
-      context.assertTrue(x.succeeded());
-      if (x.succeeded()) {
-        logger.debug("Succeeded to connect");
-        PulsarConnection pulsarConnection = x.result();
+    client = usage.getClient();
+    client.connect(handler -> {
+      logger.debug("Test connection result: "+handler != null);
+      assertTrue(handler.succeeded());
+      if (handler.succeeded()) {
+        logger.debug("Test Succeeded to connect");
+        PulsarConnection pulsarConnection = handler.result();
         pulsarConnection.createProducer(topic, p -> {
-          logger.debug("Creating Producer");
+          logger.debug("Test Creating Producer");
           PulsarProducer pulsarProducer = p.result();
           PulsarMessage pulsarMessage = PulsarMessage.create(new JsonObject().put("test", "test"));
           pulsarProducer.send(pulsarMessage);
 
         });
       } else {
-        logger.debug("Failed to connect");
+        logger.error("Test Failed to connect", handler.cause());
 
       }
       done.set(true);

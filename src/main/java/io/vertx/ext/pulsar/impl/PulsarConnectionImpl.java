@@ -51,7 +51,7 @@ public class PulsarConnectionImpl implements PulsarConnection {
     this.context = context;
     this.serviceUrl = "pulsar://" + this.options.getHost() + ":" + this.options.getPort();
 
-    logger.debug("Connecting to = "+this.serviceUrl);
+    logger.debug("Connecting to = " + this.serviceUrl);
 
     runOnContext(x -> connect(client,
       Objects.requireNonNull(connectionHandler, "connection handler cannot be `null`"))
@@ -60,25 +60,27 @@ public class PulsarConnectionImpl implements PulsarConnection {
 
   private void connect(PulsarClientImpl client, Handler<AsyncResult<PulsarConnection>> connectionHandler) {
     try {
-      logger.info("Calling connect");
+      logger.debug("Calling connect");
       if (connection.get() != null && !closed.get()) {
         logger.debug("Already connected");
-        connectionHandler.handle(Future.succeededFuture(this));
+        if (connectionHandler != null)
+          connectionHandler.handle(Future.succeededFuture(this));
         return;
       }
       PulsarClient pulsarClient = PulsarClient.builder()
         .serviceUrl(this.serviceUrl)
         .build();
-      logger.debug("Connected");
       connection.set(pulsarClient);
       client.register(this);
       closed.set(false);
-      logger.info("Connected & Registered");
-      connectionHandler.handle(Future.succeededFuture(this));
+      logger.debug("Connected & Registered");
+      if (connectionHandler != null)
+        connectionHandler.handle(Future.succeededFuture(this));
     } catch (Exception ex) {
       if (exceptionHandler != null)
         exceptionHandler.handle(ex);
-      connectionHandler.handle(Future.failedFuture(ex));
+      if (connectionHandler != null)
+        connectionHandler.handle(Future.failedFuture(ex));
     }
   }
 
