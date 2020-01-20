@@ -11,21 +11,21 @@ Currently this extension is still under development, so feel free to fork and co
 
 1- Create a pulsar connection using PulsarClient object
 
-client = PulsarClient.create(vertx, null);
+    client = PulsarClient.create(vertx, null);
 
-client.connect(handler -> {
+        client.connect(handler -> {
 
-    if (handler.succeeded()) {
+        if (handler.succeeded()) {
 
-        LOGGER.info("Connection to the Pulsar succeeded");
+            LOGGER.info("Connection to the Pulsar succeeded");
 
-    } else {
+        } else {
 
-        LOGGER.info("Connection to the Pulsar failed");
+            LOGGER.info("Connection to the Pulsar failed");
 
-    }
+        }
 
-});
+    });
 
 **Requirements**
 
