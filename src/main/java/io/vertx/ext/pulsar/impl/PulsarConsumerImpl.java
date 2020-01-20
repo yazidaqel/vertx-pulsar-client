@@ -56,7 +56,6 @@ public class PulsarConsumerImpl<T> implements PulsarConsumer<T> {
     init(
       schema,
       options,
-      handler,
       completionHandler
     );
   }
@@ -74,14 +73,12 @@ public class PulsarConsumerImpl<T> implements PulsarConsumer<T> {
     init(
       schema,
       options,
-      handler,
       completionHandler
     );
   }
 
   void init(Schema schema,
        PulsarConsumerOptions options,
-       Handler<PulsarMessage<T>> handler,
        Handler<AsyncResult<PulsarConsumer>> completionHandler){
 
     PulsarClient pulsarClient = connection.connection();
