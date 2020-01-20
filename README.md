@@ -12,15 +12,23 @@ Currently this extension is still under development, so feel free to fork and co
 1- Create a pulsar connection using PulsarClient object
 
 client = PulsarClient.create(vertx, null);
+
 client.connect(handler -> {
+
     if (handler.succeeded()) {
+
         LOGGER.info("Connection to the Pulsar succeeded");
+
     } else {
+
         LOGGER.info("Connection to the Pulsar failed");
+
     }
+
 });
 
 **Requirements**
+
 Docker (used with Test Container)
 
 Java 8
@@ -28,6 +36,7 @@ Java 8
 Maven
 
 **Instructions**
+
 mvn clean install
 
 
