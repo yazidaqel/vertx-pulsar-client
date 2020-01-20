@@ -55,13 +55,9 @@ public class PulsarConnectionTest extends PulsarTestBase {
       .setPort(port)
     ).connect(
       handler -> {
-
-        assertTrue(handler.succeeded());
-
         if(handler.succeeded()){
           client.close(closeHandler ->{
             done.set(closeHandler.succeeded());
-            assertTrue(handler.succeeded());
             done.set(true);
           });
         }else
