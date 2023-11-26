@@ -39,19 +39,17 @@ public class PulsarProducerTest extends PulsarTestBase {
   @Test(timeout = 20000)
   public void testProducerWithoutOptions() {
     String topic = UUID.randomUUID().toString();
-    String sentContent = "myMessageContent-" + topic;
     AtomicBoolean done = new AtomicBoolean();
-
     client = usage.getClient();
     client.connect(handler -> {
-      logger.debug("Test connection result: " + handler != null);
+      logger.info("Trying to connect");
       if (handler.succeeded()) {
-        logger.debug("Test Succeeded to connect");
+        logger.info("Test Succeeded to connect");
         PulsarConnection pulsarConnection = handler.result();
         pulsarConnection.createProducer(topic, p -> {
-          logger.debug("Test Creating Producer");
+          logger.info("Test Creating Producer");
           if (p.succeeded()) {
-            PulsarProducer pulsarProducer = p.result();
+            PulsarProducer<String> pulsarProducer = p.result();
             PulsarMessage pulsarMessage = PulsarMessage.create(new JsonObject().put("test", "test"));
             pulsarProducer.send(pulsarMessage);
           }

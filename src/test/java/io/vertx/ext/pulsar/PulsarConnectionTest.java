@@ -49,19 +49,21 @@ public class PulsarConnectionTest extends PulsarTestBase {
   @Test
   public void testConnectionSuccessWithDetailsPassedInOptions() {
     AtomicBoolean done = new AtomicBoolean();
-    logger.debug("testConnectionSuccessWithDetailsPassedInOptions");
+    logger.info("testConnectionSuccessWithDetailsPassedInOptions");
     client = PulsarClient.create(new PulsarClientOptions()
       .setHost(host)
       .setPort(port)
     ).connect(
       handler -> {
-        if(handler.succeeded()){
-          client.close(closeHandler ->{
+        if (handler.succeeded()) {
+          logger.info("Successfully connected");
+          client.close(closeHandler -> {
             done.set(closeHandler.succeeded());
             done.set(true);
           });
-        }else
-        done.set(true);
+        } else {
+          done.set(true);
+        }
       }
     );
 

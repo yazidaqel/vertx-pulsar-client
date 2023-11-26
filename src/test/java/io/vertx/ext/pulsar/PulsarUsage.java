@@ -39,7 +39,8 @@ public class PulsarUsage {
     CountDownLatch latch = new CountDownLatch(1);
     this.context = vertx.getOrCreateContext();
     context.runOnContext(x -> {
-      client = PulsarClient.create(vertx, null);
+      LOGGER.info("Creating client using provided host and port");
+      client = PulsarClient.create(vertx, new PulsarClientOptions().setHost(host).setPort(port));
       client.connect(handler -> {
         if (handler.succeeded()) {
           LOGGER.info("Connection to the Pulsar succeeded");

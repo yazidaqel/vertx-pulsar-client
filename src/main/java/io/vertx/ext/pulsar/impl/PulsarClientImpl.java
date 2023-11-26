@@ -53,31 +53,33 @@ public class PulsarClientImpl implements PulsarClient {
 
   @Override
   public void close(@Nullable Handler<AsyncResult<Void>> handler) {
-    List<Future> actions = new ArrayList<>();
+    List<Future<Void>> actions = new ArrayList<>();
     for (PulsarConnection connection : connections) {
       Promise<Void> promise = Promise.promise();
       connection.close(promise);
       actions.add(promise.future());
     }
 
-    CompositeFuture.join(actions).setHandler(done -> {
-      connections.clear();
-      if (mustCloseVertxOnClose) {
-        vertx.close(x -> {
-          if (done.succeeded() && x.succeeded()) {
-            if (handler != null) {
-              handler.handle(Future.succeededFuture());
-            }
-          } else {
-            if (handler != null) {
-              handler.handle(Future.failedFuture(done.failed() ? done.cause() : x.cause()));
-            }
-          }
-        });
-      } else if (handler != null) {
-        handler.handle(done.mapEmpty());
-      }
-    });
+    Future.join(actions).onComplete(
+      done -> {
+        connections.clear();
+        if (mustCloseVertxOnClose) {
+          vertx.close()
+            .onComplete(x -> {
+              if (done.succeeded() && x.succeeded()) {
+                if (handler != null) {
+                  handler.handle(Future.succeededFuture());
+                }
+              } else {
+                if (handler != null) {
+                  handler.handle(Future.failedFuture(done.failed() ? done.cause() : x.cause()));
+                }
+              }
+            });
+        } else if (handler != null) {
+          handler.handle(done.mapEmpty());
+        }
+      });
   }
 
   @Override

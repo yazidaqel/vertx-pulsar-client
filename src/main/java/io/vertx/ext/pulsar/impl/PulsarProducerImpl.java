@@ -20,6 +20,8 @@ import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.Promise;
+import io.vertx.core.impl.logging.Logger;
+import io.vertx.core.impl.logging.LoggerFactory;
 import io.vertx.ext.pulsar.PulsarConnection;
 import io.vertx.ext.pulsar.PulsarMessage;
 import io.vertx.ext.pulsar.PulsarProducer;
@@ -32,13 +34,14 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 public class PulsarProducerImpl<T> implements PulsarProducer<T> {
 
+  private static final Logger logger = LoggerFactory.getLogger(PulsarProducerImpl.class);
+
   private PulsarConnectionImpl connection;
   private PulsarProducerOptions options;
   private String topic;
   private AtomicBoolean closed;
   private Handler<Throwable> exceptionHandler;
-  private Handler<Void> drainHandler;
-  private Producer producer;
+  private Producer<T> producer;
 
 
   PulsarProducerImpl(
@@ -46,7 +49,7 @@ public class PulsarProducerImpl<T> implements PulsarProducer<T> {
     Class<T> classSchema,
     PulsarConnectionImpl connection,
     PulsarProducerOptions options,
-    Handler<AsyncResult<PulsarProducer>> completionHandler
+    Handler<AsyncResult<PulsarProducer<T>>> completionHandler
   ) {
     Schema<T> schema = JSONSchema.of(classSchema);
     new PulsarProducerImpl(topic, schema, connection, options, completionHandler);
@@ -57,14 +60,14 @@ public class PulsarProducerImpl<T> implements PulsarProducer<T> {
     Schema<T> schema,
     PulsarConnectionImpl connection,
     PulsarProducerOptions options,
-    Handler<AsyncResult<PulsarProducer>> completionHandler
+    Handler<AsyncResult<PulsarProducer<T>>> completionHandler
   ) {
     this.connection = connection;
     this.options = options;
     this.topic = options.getTopic() != null ? options.getTopic() : topic;
     PulsarClient pulsarClient = this.connection.connection();
     try {
-      ProducerBuilder producerBuilder = pulsarClient.newProducer(schema);
+      ProducerBuilder<T> producerBuilder = pulsarClient.newProducer(schema);
       producerBuilder.topic(this.topic);
       if (this.options.getProducerName() != null)
         producerBuilder.producerName(this.options.getProducerName());
@@ -90,14 +93,14 @@ public class PulsarProducerImpl<T> implements PulsarProducer<T> {
 
       completionHandler.handle(Future.succeededFuture(this));
     } catch (Exception ex) {
-      if(exceptionHandler != null)
+      if (exceptionHandler != null)
         exceptionHandler.handle(ex);
       completionHandler.handle(Future.failedFuture(ex));
     }
   }
 
   @Override
-  public PulsarProducer send(PulsarMessage message) {
+  public PulsarProducer<T> send(PulsarMessage<T> message) {
     return doSend(message, null);
   }
 
@@ -138,7 +141,7 @@ public class PulsarProducerImpl<T> implements PulsarProducer<T> {
   }
 
   @Override
-  public PulsarProducer exceptionHandler(Handler<Throwable> handler) {
+  public PulsarProducer<T> exceptionHandler(Handler<Throwable> handler) {
     this.exceptionHandler = handler;
     return this;
   }
@@ -151,18 +154,18 @@ public class PulsarProducerImpl<T> implements PulsarProducer<T> {
   }
 
   @Override
-  public void write(PulsarMessage<T> pulsarMessage, Handler<AsyncResult<Void>> handler) {
-    doSend(pulsarMessage, handler);
+  public Future<Void> end() {
+    return null;
   }
 
   @Override
-  public void end(Handler<AsyncResult<Void>> handler) {
-      close(null);
+  public Future<Void> end(PulsarMessage<T> data) {
+    return PulsarProducer.super.end(data);
   }
 
 
   @Override
-  public PulsarProducer setWriteQueueMaxSize(int i) {
+  public PulsarProducer<T> setWriteQueueMaxSize(int i) {
     return this;
   }
 
@@ -172,21 +175,19 @@ public class PulsarProducerImpl<T> implements PulsarProducer<T> {
   }
 
   @Override
-  public PulsarProducer drainHandler(@Nullable Handler<Void> handler) {
-    this.drainHandler = handler;
+  public PulsarProducer<T> drainHandler(@Nullable Handler<Void> handler) {
     return this;
   }
 
-  private PulsarProducer doSend(PulsarMessage message, Handler<AsyncResult<Void>> acknowledgmentHandler) {
-
-    synchronized (this) {
-      //      remoteCredit--;
-    }
+  private PulsarProducer<T> doSend(PulsarMessage<T> message, Handler<AsyncResult<Void>> acknowledgmentHandler) {
 
     connection.runWithTrampoline(x -> {
       try {
         MessageId messageId = producer.send(message.body());
-        // Check how pulsar notify the producer about message delivery.
+        logger.debug("Message sent, ID: " + messageId);
+        acknowledgmentHandler.handle(
+          Future.succeededFuture()
+        );
 
       } catch (PulsarClientException e) {
         acknowledgmentHandler.handle(Future.failedFuture(e));

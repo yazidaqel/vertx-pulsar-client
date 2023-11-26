@@ -16,20 +16,25 @@
 package io.vertx.ext.pulsar;
 
 import io.vertx.core.Vertx;
+import io.vertx.core.impl.logging.Logger;
+import io.vertx.core.impl.logging.LoggerFactory;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.ClassRule;
-import org.testcontainers.containers.GenericContainer;
+import org.testcontainers.containers.PulsarContainer;
+import org.testcontainers.utility.DockerImageName;
 
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 public class PulsarTestBase {
+  private static final Logger logger = LoggerFactory.getLogger(PulsarConnectionTest.class);
+
 
   PulsarClient client;
 
   @ClassRule
-  public static GenericContainer pulsar = new GenericContainer("apachepulsar/pulsar:2.4.2")
+  public static PulsarContainer pulsar = new PulsarContainer(DockerImageName.parse("apachepulsar/pulsar:3.0.0"))
     .withCommand("-it")
     .withExposedPorts(6650,8080)
     .withCommand("bin/pulsar standalone");
@@ -42,7 +47,7 @@ public class PulsarTestBase {
   @Before
   public void setup() {
     vertx = Vertx.vertx();
-    host = pulsar.getContainerIpAddress();
+    host = pulsar.getHost();
     port = pulsar.getMappedPort(6650);
     System.setProperty("pulsar-host", host);
     System.setProperty("pulsar-port", Integer.toString(port));
@@ -63,7 +68,7 @@ public class PulsarTestBase {
     System.clearProperty("pulsar-port");
 
     usage.close();
-    vertx.close(x -> latch2.countDown());
+    vertx.close().onComplete(x -> latch2.countDown());
 
     latch2.await(10, TimeUnit.SECONDS);
   }

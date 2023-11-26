@@ -24,7 +24,7 @@ import io.vertx.core.streams.WriteStream;
 @VertxGen
 public interface PulsarProducer<T> extends WriteStream<PulsarMessage<T>> {
 
-  PulsarProducer send(PulsarMessage<T> message);
+  PulsarProducer<T> send(PulsarMessage<T> message);
 
   void close(Handler<AsyncResult<Void>> handler);
 
